@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saroor Records | World-Class Music Label & Recording Studio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        amberGold: '#F59E0B',
+                        warmGold: '#D97706',
+                        studioDark: '#0A0A0C',
+                        studioCard: '#12131A',
+                        neonRed: '#FF2A5F'
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Three.js & Alpine.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        body {
+            background-color: #0A0A0C;
+            color: #F3F4F6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(18, 19, 26, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+        }
+
+        .glass-card {
+            background: rgba(22, 24, 34, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(245, 158, 11, 0.5);
+            box-shadow: 0 15px 35px -10px rgba(245, 158, 11, 0.25);
+            transform: translateY(-6px);
+        }
+
+        /* Background Particle Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Intro Loader Styles */
+        #intro-loader {
+            position: fixed;
+            inset: 0;
+            background: #050507;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .eq-bar {
+            width: 6px;
+            background: linear-gradient(to top, #D97706, #F59E0B);
+            border-radius: 4px;
+            animation: eqAnim 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes eqAnim {
+            0% { height: 15px; }
+            100% { height: 60px; }
+        }
+
+        .eq-bar:nth-child(1) { animation-delay: 0.1s; }
+        .eq-bar:nth-child(2) { animation-delay: 0.3s; }
+        .eq-bar:nth-child(3) { animation-delay: 0.2s; }
+        .eq-bar:nth-child(4) { animation-delay: 0.4s; }
+        .eq-bar:nth-child(5) { animation-delay: 0.15s; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0A0C;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272A;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #F59E0B;
+        }
+    </style>
+</head>
+<body x-data="saroorApp()" class="antialiased selection:bg-amberGold selection:text-black">
+
+    <!-- Intro Reveal Screen with Beat Soundwave Animation -->
+    <div id="intro-loader">
+        <div class="relative w-28 h-28 mb-6 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border-2 border-amberGold/30 animate-ping"></div>
+            <img src="saroor.jpg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=600&auto=format&fit=crop'" alt="Saroor Logo" class="w-24 h-24 rounded-full object-cover border-2 border-amberGold shadow-2xl">
+        </div>
+        <div class="flex items-end gap-1.5 h-16 mb-4">
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+        </div>
+        <div class="text-amberGold font-display font-extrabold text-xl tracking-widest uppercase animate-pulse">SAROOR RECORDS</div>
+        <div class="text-gray-400 text-xs font-mono mt-1">INITIALIZING AUDIO STUDIO EXPERIENCE...</div>
+    </div>
+
+    <!-- 3D Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="content-layer">
+
+        <!-- Navigation Bar -->
+        <header class="fixed top-0 left-0 w-full z-40 glass-panel border-b border-amberGold/20 px-6 lg:px-16 py-4 flex justify-between items-center transition-all duration-300">
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-amberGold p-0.5 shadow-lg shadow-amberGold/20 group-hover:scale-105 transition-transform">
+                    <img src="saroor.jpg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=600&auto=format&fit=crop'" alt="Saroor Logo" class="w-full h-full object-cover rounded-full">
+                </div>
+                <div>
+                    <span class="font-display font-black text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amberGold via-yellow-200 to-amber-500 block leading-none">SAROOR RECORDS</span>
+                    <span class="text-[10px] text-gray-400 font-semibold tracking-widest uppercase">Johar Town C-Block, Lahore</span>
+                </div>
+            </a>
+
+            <nav class="hidden md:flex items-center space-x-8 text-xs font-bold tracking-widest uppercase text-gray-300">
+                <a href="#about" class="hover:text-amberGold transition-colors">Studio & CEO</a>
+                <a href="#gear" class="hover:text-amberGold transition-colors">Instruments</a>
+                <a href="#releases" class="hover:text-amberGold transition-colors">Releases</a>
+                <a href="#packages" class="hover:text-amberGold transition-colors">Packages</a>
+                <a href="#contact" class="hover:text-amberGold transition-colors">Contact</a>
+            </nav>
+
+            <button @click="openModal('General Studio Booking')" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-amberGold to-warmGold hover:from-yellow-400 hover:to-amberGold text-black font-extrabold text-xs tracking-wider uppercase shadow-lg shadow-amberGold/20 hover:shadow-amberGold/40 transition-all flex items-center gap-2">
+                <i class="fab fa-whatsapp text-sm"></i>
+                <span>Book Session</span>
+            </button>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="min-h-screen pt-36 pb-20 px-6 lg:px-16 flex flex-col justify-center items-center text-center relative">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amberGold/10 border border-amberGold/30 text-amberGold text-xs font-bold tracking-widest uppercase mb-6 animate-pulse">
+                <i class="fas fa-compact-disc animate-spin"></i> Premier Music Label & Recording Facility
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl lg:text-8xl font-black font-display tracking-tight text-white mb-6 leading-tight max-w-5xl">
+                CRAFTING SOUNDS THAT <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-amberGold via-yellow-200 to-amber-500">DEFINE GENERATIONS</span>
+            </h1>
+
+            <p class="max-w-2xl text-gray-400 text-base sm:text-lg font-light mb-10 leading-relaxed">
+                Step into Lahore's most advanced acoustic studio. Managed by <strong class="text-white">CEO Ali Dogar 325</strong>, offering pristine vocal recording, analog mixing, and global distribution.
+            </p>
+
+            <!-- Dynamic Interactive Waveform Visualizer Player -->
+            <div class="w-full max-w-2xl glass-panel p-5 rounded-2xl mb-10 border border-amberGold/30 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <button @click="toggleAudio()" class="w-12 h-12 rounded-full bg-amberGold text-black flex items-center justify-center font-bold text-lg hover:scale-105 transition-transform shadow-lg shadow-amberGold/30">
+                            <i class="fas" :class="isPlaying ? 'fa-pause' : 'fa-play'"></i>
+                        </button>
+                        <div class="text-left">
+                            <div class="text-sm font-bold text-white font-display">Saroor Studio Master Beat Demo</div>
+                            <div class="text-xs text-amberGold font-mono" x-text="isPlaying ? 'PLAYING AUDIO FREQUENCY (LIVE)' : 'CLICK PLAY TO EXPERIENCE'"></div>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono bg-amberGold/10 text-amberGold border border-amberGold/30 px-3 py-1 rounded-full uppercase">96kHz / 24-Bit HD</span>
+                </div>
+
+                <canvas id="audio-wave-canvas" class="w-full h-20 rounded-xl bg-black/60"></canvas>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#packages" class="px-8 py-4 rounded-full bg-gradient-to-r from-amberGold to-warmGold text-black font-extrabold text-xs tracking-widest uppercase shadow-xl shadow-amberGold/20 hover:shadow-amberGold/40 transition-all flex items-center gap-2">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Explore Packages</span>
+                </a>
+                <a href="#gear" class="px-8 py-4 rounded-full glass-panel border border-amberGold/40 text-amberGold hover:text-white font-extrabold text-xs tracking-widest uppercase transition-all flex items-center gap-2">
+                    <i class="fas fa-drum"></i>
+                    <span>View Studio Gear</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Stats Counter Bar -->
+        <section class="py-12 px-6 lg:px-16 glass-panel border-y border-amberGold/20 my-10">
+            <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-3xl sm:text-5xl font-black font-display text-amberGold mb-1">1.3M+</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest font-semibold">TikTok Likes</div>
+                </div>
+                <div>
+                    <div class="text-3xl sm:text-5xl font-black font-display text-white mb-1">33.1K+</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest font-semibold">TikTok Followers</div>
+                </div>
+                <div>
+                    <div class="text-3xl sm:text-5xl font-black font-display text-amberGold mb-1">500+</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Mastered Tracks</div>
+                </div>
+                <div>
+                    <div class="text-3xl sm:text-5xl font-black font-display text-white mb-1">100%</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Acoustic Precision</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Studio & CEO Profile Section -->
+        <section id="about" class="py-24 px-6 lg:px-16 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-amberGold to-amber-700 rounded-3xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700"></div>
+                    <div class="relative rounded-3xl overflow-hidden glass-panel p-2">
+                        <img src="saroor.jpg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=800&auto=format&fit=crop'" alt="Saroor Studio & CEO" class="w-full h-[480px] object-cover rounded-2xl transform group-hover:scale-105 transition duration-700">
+                        <div class="absolute bottom-6 left-6 right-6 p-5 glass-panel rounded-2xl border border-amberGold/30">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="text-white font-bold font-display text-lg">Ali Dogar 325</h4>
+                                    <p class="text-xs text-amberGold font-medium">Founder & Chief Executive Officer</p>
+                                </div>
+                                <span class="px-3 py-1 bg-amberGold/20 border border-amberGold/40 text-amberGold text-[10px] font-bold uppercase rounded-full">Official Label</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <span class="text-amberGold text-xs font-extrabold tracking-widest uppercase">About Saroor Records</span>
+                    <h2 class="text-3xl sm:text-5xl font-black font-display text-white leading-tight">
+                        WHERE ARTISTRY MEETS <br>
+                        <span class="text-amberGold">ACOUSTIC PERFECTION</span>
+                    </h2>
+                    <p class="text-gray-300 text-base leading-relaxed font-light">
+                        Located in the heart of Lahore at Johar Town C-Block, Saroor Records provides artist-first recording, sound engineering, beat creation, and digital release strategy. Managed by CEO Ali Dogar 325, we turn raw vocals into global hit releases.
+                    </p>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4">
+                        <div class="glass-card p-4 rounded-xl">
+                            <i class="fas fa-microphone-alt text-amberGold text-2xl mb-2"></i>
+                            <h5 class="text-white font-bold text-sm font-display">Studio Microphones</h5>
+                            <p class="text-xs text-gray-400">Class-A Condensers & Tube Mics</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl">
+                            <i class="fas fa-sliders-h text-amberGold text-2xl mb-2"></i>
+                            <h5 class="text-white font-bold text-sm font-display">Mixing & Mastering</h5>
+                            <p class="text-xs text-gray-400">Analog Hybrid Sound Processing</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex flex-wrap items-center gap-6 text-xs text-gray-300 font-semibold">
+                        <a href="https://www.tiktok.com/@saroor_records" target="_blank" class="flex items-center gap-2 hover:text-amberGold transition-colors">
+                            <i class="fab fa-tiktok text-lg text-amberGold"></i>
+                            <span>@saroor_records</span>
+                        </a>
+                        <span class="text-gray-600">|</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-location-dot text-amberGold"></i>
+                            <span>Johar Town C-Block, Lahore</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Studio Gear & Instruments Showcase Section -->
+        <section id="gear" class="py-20 px-6 lg:px-16 max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <span class="text-amberGold text-xs font-extrabold tracking-widest uppercase">Professional Equipment</span>
+                <h2 class="text-3xl sm:text-5xl font-black font-display text-white mt-2">WORLD-CLASS INSTRUMENTS & GEAR</h2>
+                <p class="text-gray-400 max-w-xl mx-auto mt-3 text-sm">We use industry-standard gear to deliver unmatched audio clarity.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Instrument Card 1 -->
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="h-56 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=600&auto=format&fit=crop" alt="Microphone" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-studioDark via-transparent to-transparent"></div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-[10px] text-amberGold font-extrabold tracking-widest uppercase">Vocal Recording</span>
+                        <h4 class="text-white font-bold font-display text-lg mt-1">High-End Condenser Mics</h4>
+                        <p class="text-xs text-gray-400 mt-2">Ultra-clear vocal isolation for singing, rap, and voiceovers.</p>
+                    </div>
+                </div>
+
+                <!-- Instrument Card 2 -->
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="h-56 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop" alt="Acoustic Guitar" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-studioDark via-transparent to-transparent"></div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-[10px] text-amberGold font-extrabold tracking-widest uppercase">Live Acoustic</span>
+                        <h4 class="text-white font-bold font-display text-lg mt-1">Guitars & Strings</h4>
+                        <p class="text-xs text-gray-400 mt-2">Studio-grade acoustic and electric guitar recording setups.</p>
+                    </div>
+                </div>
+
+                <!-- Instrument Card 3 -->
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="h-56 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=600&auto=format&fit=crop" alt="Synthesizer" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-studioDark via-transparent to-transparent"></div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-[10px] text-amberGold font-extrabold tracking-widest uppercase">Beat Production</span>
+                        <h4 class="text-white font-bold font-display text-lg mt-1">MIDI Controllers & Synths</h4>
+                        <p class="text-xs text-gray-400 mt-2">Custom beat composition, Punjabi folk loops, and hip-hop beats.</p>
+                    </div>
+                </div>
+
+                <!-- Instrument Card 4 -->
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="h-56 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=600&auto=format&fit=crop" alt="Console Board" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-studioDark via-transparent to-transparent"></div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-[10px] text-amberGold font-extrabold tracking-widest uppercase">Console Control</span>
+                        <h4 class="text-white font-bold font-display text-lg mt-1">Analog Mixing Board</h4>
+                        <p class="text-xs text-gray-400 mt-2">Warm analog summing for dynamic and powerful stereo depth.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Official TikTok Releases Showcase Section -->
+        <section id="releases" class="py-20 px-6 lg:px-16 max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
+                <div>
+                    <span class="text-amberGold text-xs font-extrabold tracking-widest uppercase">Featured Content</span>
+                    <h2 class="text-3xl sm:text-5xl font-black font-display text-white mt-1">OFFICIAL RELEASES & REELS</h2>
+                </div>
+                <a href="https://www.tiktok.com/@saroor_records" target="_blank" class="mt-4 md:mt-0 text-amberGold hover:text-white flex items-center gap-2 text-xs font-bold tracking-widest uppercase transition-colors">
+                    <span>Follow @saroor_records on TikTok</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Reel Card 1 -->
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="relative h-80 overflow-hidden">
+                        <img src="saroor.jpg" onerror="this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop'" alt="Reel 1" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <span class="text-[10px] bg-amberGold text-black font-bold px-2 py-0.5 rounded-full uppercase">Sufi Vocal Track</span>
+                            <h4 class="text-white font-bold font-display text-base mt-1">Hit Sufi Kalaam</h4>
+                            <p class="text-xs text-gray-400">100K+ Views</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reel Card 2 -->
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="relative h-80 overflow-hidden">
+                        <img src="saroor.jpg" onerror="this.src='https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=600&auto=format&fit=crop'" alt="Reel 2" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <span class="text-[10px] bg-amberGold text-black font-bold px-2 py-0.5 rounded-full uppercase">Punjabi Folk</span>
+                            <h4 class="text-white font-bold font-display text-base mt-1">Original Folk Track</h4>
+                            <p class="text-xs text-gray-400">250K+ Views</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reel Card 3 -->
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="relative h-80 overflow-hidden">
+                        <img src="saroor.jpg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=600&auto=format&fit=crop'" alt="Reel 3" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <span class="text-[10px] bg-amberGold text-black font-bold px-2 py-0.5 rounded-full uppercase">BTS Studio</span>
+                            <h4 class="text-white font-bold font-display text-base mt-1">Studio Session BTS</h4>
+                            <p class="text-xs text-gray-400">500K+ Views</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reel Card 4 -->
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="relative h-80 overflow-hidden">
+                        <img src="saroor.jpg" onerror="this.src='https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=600&auto=format&fit=crop'" alt="Reel 4" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <span class="text-[10px] bg-amberGold text-black font-bold px-2 py-0.5 rounded-full uppercase">CEO Special</span>
+                            <h4 class="text-white font-bold font-display text-base mt-1">Ali Dogar Viral Track</h4>
+                            <p class="text-xs text-gray-400">1M+ Views</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Studio Packages Section -->
+        <section id="packages" class="py-20 px-6 lg:px-16 max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <span class="text-amberGold text-xs font-extrabold tracking-widest uppercase">Affordable Pricing</span>
+                <h2 class="text-3xl sm:text-5xl font-black font-display text-white mt-2">STUDIO RECORDING PACKAGES</h2>
+                <p class="text-gray-400 max-w-xl mx-auto mt-3 text-sm">Select the best package tailored to your music project goals.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Package 1 -->
+                <div class="glass-card rounded-3xl p-8 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs text-gray-400 font-extrabold uppercase tracking-widest">Basic Session</span>
+                        <h3 class="text-2xl font-bold font-display text-white mt-2">Vocal / Demo Recording</h3>
+                        <div class="text-3xl font-black font-display text-amberGold my-4">Best Rates</div>
+                        <ul class="space-y-3 text-xs text-gray-300 mb-8">
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> 1 Hour Dedicated Recording</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> Basic Vocal Cleaning</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> High-Resolution WAV Export</li>
+                        </ul>
+                    </div>
+                    <button @click="openModal('Basic Vocal Package')" class="w-full py-3.5 rounded-2xl border border-amberGold/40 text-amberGold hover:bg-amberGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all">Book Basic Track</button>
+                </div>
+
+                <!-- Package 2 (Featured) -->
+                <div class="glass-card rounded-3xl p-8 flex flex-col justify-between border-2 border-amberGold shadow-2xl shadow-amberGold/20 scale-105 relative">
+                    <div class="absolute -top-4 right-8 bg-amberGold text-black font-black text-[10px] uppercase tracking-widest px-4 py-1 rounded-full">
+                        Most Popular
+                    </div>
+                    <div>
+                        <span class="text-xs text-amberGold font-extrabold uppercase tracking-widest">Pro Production</span>
+                        <h3 class="text-2xl font-bold font-display text-white mt-2">Full Song Music Master</h3>
+                        <div class="text-3xl font-black font-display text-amberGold my-4">Hit Quality</div>
+                        <ul class="space-y-3 text-xs text-gray-200 mb-8">
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> Custom Music Composition</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> Pitch Correction & Tuning</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> Pro Mixing & Analog Mastering</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> TikTok Promo Cut Included</li>
+                        </ul>
+                    </div>
+                    <button @click="openModal('Pro Production Master Package')" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amberGold to-warmGold text-black font-extrabold text-xs uppercase tracking-widest shadow-lg shadow-amberGold/20 hover:scale-102 transition-all">Book Full Production</button>
+                </div>
+
+                <!-- Package 3 -->
+                <div class="glass-card rounded-3xl p-8 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs text-gray-400 font-extrabold uppercase tracking-widest">Label Release</span>
+                        <h3 class="text-2xl font-bold font-display text-white mt-2">Official Saroor Release</h3>
+                        <div class="text-3xl font-black font-display text-amberGold my-4">All-In-One</div>
+                        <ul class="space-y-3 text-xs text-gray-300 mb-8">
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> Release on Saroor Records</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> TikTok Promotion (33.1K+ Base)</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> 4K Video Production</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-amberGold"></i> Digital Stores Distribution</li>
+                        </ul>
+                    </div>
+                    <button @click="openModal('Official Label Release Package')" class="w-full py-3.5 rounded-2xl border border-amberGold/40 text-amberGold hover:bg-amberGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all">Book Label Track</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer Contact Section -->
+        <footer id="contact" class="glass-panel border-t border-amberGold/20 pt-16 pb-8 px-6 lg:px-16 mt-20">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+                <div>
+                    <h3 class="text-2xl font-black font-display text-amberGold mb-4">SAROOR RECORDS</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed mb-6">
+                        Pakistan's premier record label and recording studio based in Lahore. Delivering acoustic depth, hit sound engineering, and creative vision.
+                    </p>
+                    <div class="flex gap-3">
+                        <a href="https://www.tiktok.com/@saroor_records" target="_blank" class="w-10 h-10 rounded-full glass-panel border border-amberGold/40 text-amberGold hover:bg-amberGold hover:text-black flex items-center justify-center transition-all">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                        <button @click="openModal('Footer Contact')" class="w-10 h-10 rounded-full glass-panel border border-amberGold/40 text-amberGold hover:bg-amberGold hover:text-black flex items-center justify-center transition-all">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold font-display text-sm mb-4 border-b border-amberGold/20 pb-2 uppercase tracking-widest">Studio Info</h4>
+                    <ul class="space-y-3 text-xs text-gray-300">
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-user text-amberGold"></i>
+                            <span><strong>CEO:</strong> Ali Dogar 325</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-location-dot text-amberGold"></i>
+                            <span>Johar Town C-Block, Lahore, Pakistan</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fab fa-whatsapp text-amberGold"></i>
+                            <span>+92 300 1011745</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold font-display text-sm mb-4 border-b border-amberGold/20 pb-2 uppercase tracking-widest">Studio Location</h4>
+                    <div class="glass-card p-3 rounded-2xl text-center">
+                        <div class="h-28 rounded-xl bg-black/50 flex flex-col items-center justify-center border border-amberGold/20">
+                            <i class="fas fa-map-marked-alt text-amberGold text-2xl mb-1"></i>
+                            <span class="text-xs font-bold text-white">Johar Town C-Block</span>
+                            <span class="text-[10px] text-gray-400">Lahore, Punjab</span>
+                        </div>
+                        <a href="https://wa.me/923001011745?text=Hi%20Saroor%20Records!%20Send%20me%20studio%20location." target="_blank" class="block w-full py-2 mt-2 bg-amberGold/10 hover:bg-amberGold/20 text-amberGold text-[10px] font-extrabold uppercase rounded-lg transition-colors">Get Google Map Pin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 pt-6 text-center text-[10px] text-gray-500 font-mono">
+                &copy; 2026 SAROOR RECORDS. ALL RIGHTS RESERVED. CEO @ALI DOGAR 325.
+            </div>
+        </footer>
+
+        <!-- WhatsApp Interactive Booking Modal -->
+        <div x-show="isModalOpen" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div @click.away="isModalOpen = false" class="glass-panel border-2 border-amberGold rounded-3xl p-6 sm:p-8 max-w-md w-full relative shadow-2xl shadow-amberGold/20">
+                <button @click="isModalOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+
+                <div class="text-center mb-6">
+                    <div class="w-14 h-14 rounded-full bg-amberGold/20 border border-amberGold flex items-center justify-center mx-auto mb-3 text-amberGold text-2xl">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold font-display text-white">Book Studio Session</h3>
+                    <p class="text-xs text-gray-400 mt-1">Direct connect with Ali Dogar (+92 300 1011745)</p>
+                </div>
+
+                <form @submit.prevent="sendWhatsAppMessage()" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-1">Your Full Name</label>
+                        <input type="text" x-model="bookingForm.name" required placeholder="Enter your name" class="w-full bg-studioDark border border-amberGold/30 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-amberGold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-1">Selected Package</label>
+                        <input type="text" x-model="bookingForm.package" readonly class="w-full bg-studioDark/60 border border-amberGold/20 rounded-xl px-4 py-2.5 text-amberGold font-bold text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-1">Project Message</label>
+                        <textarea x-model="bookingForm.message" rows="3" placeholder="Tell us about your track..." class="w-full bg-studioDark border border-amberGold/30 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-amberGold"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-extrabold text-xs uppercase tracking-widest shadow-lg shadow-green-500/20 flex items-center justify-center gap-2">
+                        <i class="fab fa-whatsapp text-base"></i>
+                        <span>Send WhatsApp Message</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Application Scripting -->
+    <script>
+        function saroorApp() {
+            return {
+                isPlaying: false,
+                isModalOpen: false,
+                bookingForm: {
+                    name: '',
+                    package: 'General Booking Enquiry',
+                    message: ''
+                },
+                openModal(pkgName) {
+                    this.bookingForm.package = pkgName;
+                    this.isModalOpen = true;
+                },
+                sendWhatsAppMessage() {
+                    const phone = "923001011745";
+                    const text = `Hi Saroor Records!%0A%0A*Name:* ${encodeURIComponent(this.bookingForm.name)}%0A*Package:* ${encodeURIComponent(this.bookingForm.package)}%0A*Message:* ${encodeURIComponent(this.bookingForm.message)}`;
+                    window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+                    this.isModalOpen = false;
+                },
+                toggleAudio() {
+                    this.isPlaying = !this.isPlaying;
+                }
+            }
+        }
+
+        // Intro Loader Hide & 3D Setup On Window Load
+        window.onload = function() {
+            setTimeout(() => {
+                const loader = document.getElementById('intro-loader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    loader.style.visibility = 'hidden';
+                }
+            }, 1800);
+
+            init3DBackground();
+            initAudioWave();
+        };
+
+        // Three.js Ambient Warm Golden Sound-Particle Waves Background
+        function init3DBackground() {
+            const canvas = document.getElementById('bg-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            const particlesCount = 800;
+            const positions = new Float32Array(particlesCount * 3);
+            const colors = new Float32Array(particlesCount * 3);
+
+            const goldColor = new THREE.Color('#F59E0B');
+            const darkGoldColor = new THREE.Color('#B45309');
+
+            for (let i = 0; i < particlesCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 16;
+                positions[i + 1] = (Math.random() - 0.5) * 16;
+                positions[i + 2] = (Math.random() - 0.5) * 16;
+
+                const col = Math.random() > 0.4 ? goldColor : darkGoldColor;
+                colors[i] = col.r;
+                colors[i + 1] = col.g;
+                colors[i + 2] = col.b;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.045,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.65
+            });
+
+            const particleSystem = new THREE.Points(geometry, material);
+            scene.add(particleSystem);
+
+            camera.position.z = 5;
+
+            let mouseX = 0, mouseY = 0;
+            window.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth - 0.5) * 0.4;
+                mouseY = (e.clientY / window.innerHeight - 0.5) * 0.4;
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particleSystem.rotation.y += 0.0008;
+                particleSystem.rotation.x += 0.0004;
+
+                camera.position.x += (mouseX - camera.position.x) * 0.04;
+                camera.position.y += (-mouseY - camera.position.y) * 0.04;
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // Dynamic Waveform Visualizer Rendering
+        function initAudioWave() {
+            const canvas = document.getElementById('audio-wave-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            let step = 0;
+
+            function drawWave() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const width = canvas.width;
+                const height = canvas.height;
+                const bars = 50;
+                const barWidth = width / bars - 2;
+
+                for (let i = 0; i < bars; i++) {
+                    const amplitude = Math.sin(step + i * 0.18) * 0.5 + 0.5;
+                    const barHeight = amplitude * (height * 0.75) + 4;
+
+                    const x = i * (barWidth + 2);
+                    const y = (height - barHeight) / 2;
+
+                    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+                    gradient.addColorStop(0, '#F59E0B');
+                    gradient.addColorStop(1, '#78350F');
+
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, barWidth, barHeight, [3]);
+                    ctx.fill();
+                }
+
+                step += 0.07;
+                requestAnimationFrame(drawWave);
+            }
+            drawWave();
+        }
+    </script>
+</body>
+</html>
